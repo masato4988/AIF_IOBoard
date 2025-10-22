@@ -102,7 +102,7 @@ int main(void)
 
   HAL_CAN_Start(&hcan1);
 
-  //エンコーダset_zero
+  //エンコー�?set_zero
   uint8_t tx_enc_reset[2];
   tx_enc_reset[0] = tx_add | 0x02;
 //  tx_enc_reset[1] = 0x75;//reset
@@ -114,16 +114,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		// --- 1. 受信割り込み開始（�??��に呼ぶ??��? ---
+		// --- 1. 受信割り込み開始（�???��?��に呼ぶ???��?��? ---
 		HAL_UART_Receive_IT(&huart1, rx_buf, 4);
 
-			// --- 2. コマンド�??��信 ---
+			// --- 2. コマンド�???��?��信 ---
 		HAL_UART_Transmit_IT(&huart1, &tx_add, 1);
-		HAL_Delay(1); // 少し?��?つ?��??��?
+		HAL_Delay(1); // 少し??��?��?つ??��?��???��?��?
 
 
 		const uint16_t observed_count = (rx_buf[0] | (rx_buf[1] << 8));
-		//チェ?��?クサ?��?
+		//チェ??��?��?クサ??��?��?
 		bool binaryArray[16];
 		for(int i = 0; i < 16; i++) binaryArray[i] = (0x01) & (observed_count >> (i));
 
@@ -134,7 +134,7 @@ int main(void)
 			count = observed_count;
 			count &= 0x3FFF;
 
-			//12bit解像度のエンコー?��?は位置をシフトする
+			//12bit解像度のエンコー??��?��?は位置をシフトする
 			count = count >> 2;
 		}
 		printf("Position = %u\r\n", count);
@@ -147,7 +147,7 @@ int main(void)
 		}
 		printf("Position_Signd = %d\r\n", count_signed);
 
-		//エンコーダ値をCAN1で送信
+		//エンコー�?値をCAN1で送信
 		if (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)//txメールボックスに空きがあれば
 		{
 			CAN_TxHeaderTypeDef txHeader;
@@ -158,18 +158,18 @@ int main(void)
 
 			txHeader.StdId = 0x012;         //標準時のID
 		//	txHeader.ExtId = ;            //拡張フォーマット時のID
-			txHeader.IDE = CAN_ID_STD;      //CAN_ID_STD:標準フォーマット(11bit),CAN_ID_EXT:拡張フォーマット(29bit)
-			txHeader.RTR = CAN_RTR_DATA;    //CAN_RTR_DATA:通常のデータフレーム,CAN_RTR_REMOTE:リモートフレーム
-			txHeader.DLC = 2;               //データ長（バイト）
+			txHeader.IDE = CAN_ID_STD;      //CAN_ID_STD:標準フォーマッ�?(11bit),CAN_ID_EXT:拡張フォーマッ�?(29bit)
+			txHeader.RTR = CAN_RTR_DATA;    //CAN_RTR_DATA:通常の�?ータフレー�?,CAN_RTR_REMOTE:リモートフレー�?
+			txHeader.DLC = 2;               //�?ータ長?��バイト�?
 
 			if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, txData, &txMailbox) != HAL_OK){
-			// 送信失敗時の処理
+			// 送信失敗時の処�?
 			}
 		}
 
 
-		// --- 3. 応答�??��割り込みで処?��?され?��? ---
-		HAL_Delay(10); // 少し?��?つ?��??��?
+		// --- 3. 応答�???��?��割り込みで処??��?��?され??��?��? ---
+		HAL_Delay(10); // 少し??��?��?つ??��?��???��?��?
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
