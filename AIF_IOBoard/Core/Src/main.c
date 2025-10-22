@@ -94,43 +94,82 @@ int main(void)
   MX_CAN2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-	uint8_t tx_add = 0x54;   // AMT21 position request
-	uint8_t rx_buf[4];       // 4バイト応答用
-	uint16_t count = 0;
-	printf("Boot\n");
+  uint8_t tx_add = 0x54;   // AMT21 position request
+  uint8_t rx_buf[4];       // 4バイト応答用
+  uint16_t count = 0;
+  int16_t count_signed = 0;
+  printf("Boot\n");
 
+  HAL_CAN_Start(&hcan1);
+
+  //エンコーダset_zero
+  uint8_t tx_enc_reset[2];
+  tx_enc_reset[0] = tx_add | 0x02;
+//  tx_enc_reset[1] = 0x75;//reset
+  tx_enc_reset[1] = 0x5e;//set_zero
+  HAL_UART_Transmit_IT(&huart1, tx_enc_reset, 2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	// --- 1. 受信割り込み開始（�??��に呼ぶ??��? ---
-	HAL_UART_Receive_IT(&huart1, rx_buf, 4);
+		// --- 1. 受信割り込み開始（�??��に呼ぶ??��? ---
+		HAL_UART_Receive_IT(&huart1, rx_buf, 4);
 
-    // --- 2. コマンド�??��信 ---
-	HAL_UART_Transmit_IT(&huart1, &tx_add, 1);
-	HAL_Delay(1); // 少し?��?つ?��??��?
+			// --- 2. コマンド�??��信 ---
+		HAL_UART_Transmit_IT(&huart1, &tx_add, 1);
+		HAL_Delay(1); // 少し?��?つ?��??��?
 
 
-	const uint16_t observed_count = (rx_buf[0] | (rx_buf[1] << 8));
-	//チェ?��?クサ?��?
-	bool binaryArray[16];
-	for(int i = 0; i < 16; i++) binaryArray[i] = (0x01) & (observed_count >> (i));
+		const uint16_t observed_count = (rx_buf[0] | (rx_buf[1] << 8));
+		//チェ?��?クサ?��?
+		bool binaryArray[16];
+		for(int i = 0; i < 16; i++) binaryArray[i] = (0x01) & (observed_count >> (i));
 
-	if ((binaryArray[15] == !(binaryArray[13] ^ binaryArray[11] ^ binaryArray[9] ^ binaryArray[7] ^ binaryArray[5] ^ binaryArray[3] ^ binaryArray[1]))
-	  && (binaryArray[14] == !(binaryArray[12] ^ binaryArray[10] ^ binaryArray[8] ^ binaryArray[6] ^ binaryArray[4] ^ binaryArray[2] ^ binaryArray[0]))){
+		if ((binaryArray[15] == !(binaryArray[13] ^ binaryArray[11] ^ binaryArray[9] ^ binaryArray[7] ^ binaryArray[5] ^ binaryArray[3] ^ binaryArray[1]))
+			&& (binaryArray[14] == !(binaryArray[12] ^ binaryArray[10] ^ binaryArray[8] ^ binaryArray[6] ^ binaryArray[4] ^ binaryArray[2] ^ binaryArray[0])))
+		{
 
-		count = observed_count;
-		count &= 0x3FFF;
+			count = observed_count;
+			count &= 0x3FFF;
 
-		//12bit解像度のエンコー?��?は位置をシフトする
-		count = count >> 2;
-	}
-	printf("Position = %u\r\n", count);
+			//12bit解像度のエンコー?��?は位置をシフトする
+			count = count >> 2;
+		}
+		printf("Position = %u\r\n", count);
 
-	// --- 3. 応答�??��割り込みで処?��?され?��? ---
-	HAL_Delay(10); // 少し?��?つ?��??��?
+		//countを＋－に変換
+		if(count < 2048){
+			count_signed = count;
+		}else{
+			count_signed = count - 4096;
+		}
+		printf("Position_Signd = %d\r\n", count_signed);
+
+		//エンコーダ値をCAN1で送信
+		if (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) > 0)//txメールボックスに空きがあれば
+		{
+			CAN_TxHeaderTypeDef txHeader;
+			uint8_t txData[2];
+			txData[0] = count_signed & 0x00ff;
+			txData[1] = count_signed >> 8;
+			uint32_t txMailbox;
+
+			txHeader.StdId = 0x022;         //標準時のID
+		//	txHeader.ExtId = ;            //拡張フォーマット時のID
+			txHeader.IDE = CAN_ID_STD;      //CAN_ID_STD:標準フォーマット(11bit),CAN_ID_EXT:拡張フォーマット(29bit)
+			txHeader.RTR = CAN_RTR_DATA;    //CAN_RTR_DATA:通常のデータフレーム,CAN_RTR_REMOTE:リモートフレーム
+			txHeader.DLC = 2;               //データ長（バイト）
+
+			if (HAL_CAN_AddTxMessage(&hcan1, &txHeader, txData, &txMailbox) != HAL_OK){
+			// 送信失敗時の処理
+			}
+		}
+
+
+		// --- 3. 応答�??��割り込みで処?��?され?��? ---
+		HAL_Delay(10); // 少し?��?つ?��??��?
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -184,7 +223,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-/* USER CODE BEGIN 4 */
 int _write(int file, char *ptr, int len)
 {
   int DataIdx;
@@ -202,6 +240,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 	}
 }
+
+
 /* USER CODE END 4 */
 
 /**
