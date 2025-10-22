@@ -156,7 +156,7 @@ int main(void)
 			txData[1] = count_signed >> 8;
 			uint32_t txMailbox;
 
-			txHeader.StdId = 0x022;         //標準時のID
+			txHeader.StdId = 0x012;         //標準時のID
 		//	txHeader.ExtId = ;            //拡張フォーマット時のID
 			txHeader.IDE = CAN_ID_STD;      //CAN_ID_STD:標準フォーマット(11bit),CAN_ID_EXT:拡張フォーマット(29bit)
 			txHeader.RTR = CAN_RTR_DATA;    //CAN_RTR_DATA:通常のデータフレーム,CAN_RTR_REMOTE:リモートフレーム
