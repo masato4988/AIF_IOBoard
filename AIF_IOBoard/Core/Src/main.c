@@ -35,8 +35,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define CANID_AMT21_WHEEL  0x012
-#define CANID_AMT21_ANGLE  0x013
+#define CANID_AMT21_ANGLE 0x012
+#define CANID_AMT21_WHEEL 0x013
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -99,10 +99,10 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  const int amt21_1_ms = 100;
+  const int amt21_1_ms = 10;
   uint32_t time_amt21_1 = 0;
 
-  const int amt21_2_ms = 100;
+  const int amt21_2_ms = 10;
   uint32_t time_amt21_2 = 0;
 
   const int cycle_led_ms = 1000;
@@ -261,11 +261,11 @@ HAL_StatusTypeDef CAN1_Send_U16_StdId(uint16_t std_id, uint16_t value){
 	return HAL_CAN_AddTxMessage(&hcan1, &txHeader, txData, &txMailbox);
 }
 
-void callback_amt21_1(void){//14bit
+void callback_amt21_1(void){//14bit Angle
 	uint8_t tx_add_amt21_1 = 0x54;   // AMT21 position request
 	uint16_t count_1 = 0;
 	int16_t count_signed_1 = 0;
-	//====================USART1====================
+
 	if (amt21_read(&huart1, &count_1, tx_add_amt21_1, 10) != HAL_OK) return;
 
 
@@ -282,11 +282,10 @@ void callback_amt21_1(void){//14bit
 	CAN1_Send_U16_StdId(CANID_AMT21_ANGLE, (uint16_t)count_signed_1);
 }
 
-void callback_amt21_2(void){//12bit
+void callback_amt21_2(void){//12bit Wheel
 	uint8_t tx_add_amt21_2 = 0x54;   // AMT21 position request
 	uint16_t count_2 = 0;
-//	int16_t count_signed_2 = 0;
-	//====================USART1====================
+
 	if (amt21_read(&huart2, &count_2, tx_add_amt21_2, 10) != HAL_OK) return;
 
 	count_2 = count_2 >> 2;//because 12bit model
