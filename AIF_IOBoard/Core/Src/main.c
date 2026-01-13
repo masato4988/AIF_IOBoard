@@ -126,15 +126,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-  	if(HAL_GetTick() - time_amt21_1 > amt21_1_ms){
+  	if(HAL_GetTick() - time_amt21_1 >= amt21_1_ms){
   		time_amt21_1 = HAL_GetTick();
   		callback_amt21_1();
   	}
-  	if(HAL_GetTick() - time_amt21_2 > amt21_2_ms){
+  	if(HAL_GetTick() - time_amt21_2 >= amt21_2_ms){
   		time_amt21_2 = HAL_GetTick();
 			callback_amt21_2();
   	}
-  	if(HAL_GetTick() - time_cycle_led > cycle_led_ms){
+  	if(HAL_GetTick() - time_cycle_led >= cycle_led_ms){
   		time_cycle_led = HAL_GetTick();
   		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);//cycle_LED
   	}
@@ -267,7 +267,7 @@ void callback_amt21_1(void){//14bit Angle
 	uint16_t count_1 = 0;
 	int16_t count_signed_1 = 0;
 
-	if (amt21_read(&huart1, &count_1, tx_add_amt21_1, 10) != HAL_OK) return;
+	if (amt21_read(&huart1, &count_1, tx_add_amt21_1, 1) != HAL_OK) return;
 
 
 //	printf("Position_1 = %u\r\n", count_1);
@@ -287,7 +287,7 @@ void callback_amt21_2(void){//12bit Wheel
 	uint8_t tx_add_amt21_2 = 0x54;   // AMT21 position request
 	uint16_t count_2 = 0;
 
-	if (amt21_read(&huart2, &count_2, tx_add_amt21_2, 10) != HAL_OK) return;
+	if (amt21_read(&huart2, &count_2, tx_add_amt21_2, 1) != HAL_OK) return;
 
 //	count_2 = count_2 >> 2;//because 12bit model
 //	printf("Position_2 = %u\r\n", count_2);
